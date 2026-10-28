@@ -1,0 +1,28 @@
+{
+  "name": "@workers-workload-identity/domain-identity",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "Dependency-free issuance policy rules for workers-workload-identity",
+  "homepage": "https://github.com/akita0724/workers-workload-identity#readme",
+  "bugs": {
+    "url": "https://github.com/akita0724/workers-workload-identity/issues"
+  },
+  "license": "MIT",
+  "author": "akita0724",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akita0724/workers-workload-identity.git",
+    "directory": "packages/domain-identity"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "5.0.5"
+  }
+}

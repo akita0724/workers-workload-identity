@@ -1,0 +1,44 @@
+name: Publish documentation
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+      - run: pnpm install --filter @workers-workload-identity/docs... --frozen-lockfile
+      - run: pnpm docs:translations:check
+      - run: pnpm docs:validate
+      - run: pnpm docs:build
+      - run: pnpm docs:audit:i18n
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: apps/docs/dist
+          include-hidden-files: true
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

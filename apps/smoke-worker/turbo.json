@@ -1,0 +1,16 @@
+{
+  "extends": ["//"],
+  "tags": ["adapter"],
+  "tasks": {
+    "test": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "../issuer-worker/src/**",
+        "../../scripts/deployment-config.mjs",
+        "../../scripts/staging-sql.mjs",
+        "../../migrations/**",
+        "../../scripts/vitest.e2e.config.mts"
+      ]
+    }
+  }
+}

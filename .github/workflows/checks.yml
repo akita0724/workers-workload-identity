@@ -1,0 +1,32 @@
+name: Check workspace
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm boundaries
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm --filter @workers-workload-identity/admin-ui exec playwright install --with-deps chromium
+      - run: pnpm --filter @workers-workload-identity/admin-ui test:ui
+      - run: pnpm staging:check --sample
+      - run: pnpm docs:translations:check
+      - run: pnpm docs:validate
+      - run: pnpm docs:build
+      - run: pnpm docs:audit:i18n

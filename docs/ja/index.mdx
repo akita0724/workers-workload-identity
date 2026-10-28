@@ -1,0 +1,47 @@
+---
+title: workers-workload-identity
+description: Cloudflare Workers のための短命なワークロード ID アサーション
+sidebar:
+  icon: house
+  order: 0
+---
+
+`workers-workload-identity` は、Cloudflare Workers 上のサービスへ、ワークロードアサーションと呼ぶ短命の署名付き JWT を発行します。caller は Service Binding に固定した `ctx.props` で識別し、公開の token endpoint は設けません。relying party は公開 JWKS でアサーションを検証します。
+
+:::warning
+本プロジェクトはアルファ版（`v0.1.0-alpha.0`）です。Worker 間の発行と検証はローカルと Cloudflare のステージング環境で確認済みですが、外部プロバイダーとの token exchange は未検証です。評価環境にだけデプロイしてください。[リリース状況](./reference/release-status.md)を参照してください。
+:::
+
+## 最初に読むページ
+
+1. [ワークロード ID フェデレーションとは](./oidc.mdx)では、本プロジェクトが提供する機能、OpenID Provider との違い、信頼境界を説明します。
+2. [クイックスタート](./getting-started.mdx)では、ローカルの E2E テストを実行し、隔離したステージング用アカウントへデプロイします。
+3. [セキュリティモデル](./reference/security.md)では、デプロイ前に対処すべき脅威を説明します。
+
+## ガイド
+
+- [issuer と caller の設定](./guides/configuration.md): 設定値、binding、client、audience、grant
+- [アサーションを発行する](./guides/issuing-assertions.md): caller 用 SDK、RPC の契約、エラーコード
+- [アサーションを検証する](./guides/verifying-assertions.md): relying party が必ず行う検証
+- [ステージングへのデプロイ](./guides/deployment.md): コマンド、作成されるリソース、復旧
+- [運用ガイド](./guides/operations.md): 鍵ローテーション、アクセスの停止、監視、バックアップ、インシデント対応
+- [トラブルシューティング](./guides/troubleshooting.md): 公開エラーコードと代表的な障害
+
+## リファレンス
+
+- [セキュリティモデル](./reference/security.md)
+- [プロバイダー対応状況](./reference/provider-support.mdx): 初期の検証対象4件、将来候補の Microsoft Entra、初期ゲートでは予定していない Oracle Cloud Infrastructure
+- [リリース状況](./reference/release-status.md): 検証済みの範囲、既知の問題、ベータ版のゲート
+- [用語集](./reference/glossary.md)
+
+## 設計と内部仕様
+
+実装を変更・レビューするコントリビューター向けの資料です。利用するだけなら読む必要はありません。
+
+- [要件定義](./design/requirements.md)、[システムアーキテクチャ](./design/architecture.md)、[公開ホストとルートパス](./design/domain-routing.md)
+- [caller ライブラリの要件定義](./design/client-library.md)
+- [署名アルゴリズムと鍵ライフサイクル](./design/key-management.md)と [Rotation Controller](./design/rotation-controller.md)
+- [管理画面](./design/admin-console.md)
+- [プロバイダー検証計画](./design/provider-validation.md)と[受け入れ基準](./design/acceptance.md)
+- [リポジトリ構成](./design/repository-structure.md)、[技術選定](./design/technology-decisions.md)、[管理画面のフロントエンド技術選定](./design/frontend-selection.md)
+- [ドキュメントサイト](./design/documentation-site.md)と[根拠資料](./design/references.md)

@@ -1,0 +1,60 @@
+name: Bug report
+description: Report reproducible incorrect behavior
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Remove every secret before submitting: JWTs, private keys, API tokens, account IDs, provider identifiers, passkey data, and invitation tokens. Report vulnerabilities through [SECURITY.md](https://github.com/akita0724/workers-workload-identity/blob/main/SECURITY.md) instead.
+  - type: input
+    id: commit
+    attributes:
+      label: Commit or version
+      placeholder: e.g. 1a2b3c4
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Issuer Worker
+        - Caller SDK (packages/client)
+        - Admin Worker or admin console
+        - Rotation Controller
+        - Staging or operations scripts
+        - Examples
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Local workerd or Cloudflare, Node.js and pnpm versions, relevant configuration with secrets removed.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the public error code if there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: checks
+    attributes:
+      label: Checks you ran
+      placeholder: e.g. pnpm test:e2e

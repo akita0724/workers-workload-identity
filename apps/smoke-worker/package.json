@@ -1,0 +1,32 @@
+{
+  "name": "@workers-workload-identity/smoke-worker",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "Test caller Worker for staging and end-to-end tests",
+  "homepage": "https://github.com/akita0724/workers-workload-identity#readme",
+  "bugs": {
+    "url": "https://github.com/akita0724/workers-workload-identity/issues"
+  },
+  "license": "MIT",
+  "author": "akita0724",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akita0724/workers-workload-identity.git",
+    "directory": "apps/smoke-worker"
+  },
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run && vitest run --config ../../scripts/vitest.e2e.config.mts",
+    "test:e2e": "vitest run --config ../../scripts/vitest.e2e.config.mts"
+  },
+  "dependencies": {
+    "@workers-workload-identity/client": "workspace:*",
+    "jose": "6.2.13",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.4.7",
+    "vitest": "5.0.5"
+  }
+}

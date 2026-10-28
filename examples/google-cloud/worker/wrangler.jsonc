@@ -1,0 +1,27 @@
+{
+  "name": "wif-probe-google-cloud",
+  "main": "index.js",
+  "compatibility_date": "2026-10-27",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true
+    }
+  },
+  "services": [
+    {
+      "binding": "OIDC_ISSUER",
+      "service": "oidc",
+      "entrypoint": "IssuerRpc",
+      "props": {
+        "clientId": "probe-google-cloud"
+      }
+    }
+  ],
+  "vars": {
+    "AUDIENCE": "urn:example:gcp:staging",
+    "GOOGLE_PROVIDER": "//iam.googleapis.com/projects/123456789012/locations/global/workloadIdentityPools/example-pool/providers/example-provider",
+    "GOOGLE_PROJECT_ID": "example-project"
+  }
+}

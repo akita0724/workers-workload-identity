@@ -1,0 +1,95 @@
+{
+  "files": {
+    "../../docs/design/acceptance.md": {
+      "ja": "19165b28d178641e"
+    },
+    "../../docs/design/admin-console.md": {
+      "ja": "377358ef4308e125"
+    },
+    "../../docs/design/architecture.md": {
+      "ja": "1461cc6e828f9ccd"
+    },
+    "../../docs/design/client-library.md": {
+      "ja": "3e571023c105c8b0"
+    },
+    "../../docs/design/documentation-site.md": {
+      "ja": "6c8873de559f779c"
+    },
+    "../../docs/design/domain-routing.md": {
+      "ja": "65e3a78eb6ddc4cb"
+    },
+    "../../docs/design/frontend-selection.md": {
+      "ja": "a85ee1385eafe514"
+    },
+    "../../docs/design/key-management.md": {
+      "ja": "b0d4253e68f6a5bd"
+    },
+    "../../docs/design/meta.ts": {
+      "ja": "fb2885d64e0899d3"
+    },
+    "../../docs/design/provider-validation.md": {
+      "ja": "1fdf3209ef702ab6"
+    },
+    "../../docs/design/references.md": {
+      "ja": "a1e257e2b24b8cbd"
+    },
+    "../../docs/design/repository-structure.md": {
+      "ja": "ec051ea04b2a895c"
+    },
+    "../../docs/design/requirements.md": {
+      "ja": "48c3991d14c8db13"
+    },
+    "../../docs/design/rotation-controller.md": {
+      "ja": "974746f6103b141f"
+    },
+    "../../docs/design/technology-decisions.md": {
+      "ja": "df0a873f33dbfef3"
+    },
+    "../../docs/getting-started.mdx": {
+      "ja": "de14fa68036fff8d"
+    },
+    "../../docs/guides/configuration.md": {
+      "ja": "ea0b803c106f3b2e"
+    },
+    "../../docs/guides/deployment.md": {
+      "ja": "d734a08ccb14bb2f"
+    },
+    "../../docs/guides/issuing-assertions.md": {
+      "ja": "cf4ec1e501999080"
+    },
+    "../../docs/guides/meta.ts": {
+      "ja": "53ccc98b3c3c5e9e"
+    },
+    "../../docs/guides/operations.md": {
+      "ja": "3ca809f61672ea65"
+    },
+    "../../docs/guides/troubleshooting.md": {
+      "ja": "eb1cfaf9a61bd712"
+    },
+    "../../docs/guides/verifying-assertions.md": {
+      "ja": "80f4fadfdcb6a0c4"
+    },
+    "../../docs/index.mdx": {
+      "ja": "bdf8678581970cfe"
+    },
+    "../../docs/oidc.mdx": {
+      "ja": "4d46e2736db5a77c"
+    },
+    "../../docs/reference/glossary.md": {
+      "ja": "44772445349c77b2"
+    },
+    "../../docs/reference/meta.ts": {
+      "ja": "0c34e333fb761772"
+    },
+    "../../docs/reference/provider-support.mdx": {
+      "ja": "5f180862b795bb65"
+    },
+    "../../docs/reference/release-status.md": {
+      "ja": "c7c8998912d96086"
+    },
+    "../../docs/reference/security.md": {
+      "ja": "f56f2e25b830bbac"
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,47 @@
+---
+title: workers-workload-identity
+description: Short-lived workload identity assertions for Cloudflare Workers
+sidebar:
+  icon: house
+  order: 0
+---
+
+`workers-workload-identity` issues short-lived, signed JWTs, called workload assertions, to services running on Cloudflare Workers. It identifies each caller from the fixed `ctx.props` of its Service Binding and exposes no public token endpoint. Relying parties verify assertions with the published JWKS.
+
+:::warning
+This project is in alpha (`v0.1.0-alpha.0`). Issuance and verification between Workers pass locally and in a Cloudflare staging environment, but token exchange with external providers has not been verified. Deploy it only to evaluation environments. See [release status](./reference/release-status.md).
+:::
+
+## Start here
+
+1. [What is workload identity federation?](./oidc.mdx) explains what the project provides, how it differs from an OpenID Provider, and where its trust boundary lies.
+2. The [quickstart](./getting-started.mdx) runs the local end-to-end suite and deploys to an isolated staging account.
+3. The [security model](./reference/security.md) covers the threats you must address before deploying.
+
+## Guides
+
+- [Configure the issuer and caller](./guides/configuration.md): settings, bindings, clients, audiences, and grants
+- [Issue an assertion](./guides/issuing-assertions.md): the caller SDK, RPC contract, and error codes
+- [Verify an assertion](./guides/verifying-assertions.md): rules every relying party must enforce
+- [Deploy to staging](./guides/deployment.md): commands, created resources, and recovery
+- [Operations guide](./guides/operations.md): key rotation, disabling access, monitoring, backup, and incident response
+- [Troubleshooting](./guides/troubleshooting.md): public error codes and common failures
+
+## Reference
+
+- [Security model](./reference/security.md)
+- [Provider support](./reference/provider-support.mdx): the four initial validation targets, Microsoft Entra as a future candidate, and Oracle Cloud Infrastructure, which is not planned for the initial gate
+- [Release status](./reference/release-status.md): verified behavior, known issues, and the gates for the beta release
+- [Glossary](./reference/glossary.md)
+
+## Design and internals
+
+These pages are for contributors who change or review the implementation. You do not need them to use the project.
+
+- [Requirements](./design/requirements.md), [system architecture](./design/architecture.md), and [public host and root path](./design/domain-routing.md)
+- [Caller library requirements](./design/client-library.md)
+- [Signing algorithms and key lifecycle](./design/key-management.md) and the [Rotation Controller](./design/rotation-controller.md)
+- [Admin console](./design/admin-console.md)
+- [Provider validation plan](./design/provider-validation.md) and [acceptance criteria](./design/acceptance.md)
+- [Repository structure](./design/repository-structure.md), [technology decisions](./design/technology-decisions.md), and [admin UI frontend selection](./design/frontend-selection.md)
+- [Documentation site](./design/documentation-site.md) and [primary references](./design/references.md)

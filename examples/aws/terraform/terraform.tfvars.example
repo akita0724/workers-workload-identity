@@ -1,0 +1,5 @@
+issuer_url = "https://oidc.example.com"
+audience   = "urn:example:aws:staging"
+subject    = "service:probe-aws"
+aws_region = "us-east-1"
+name       = "example-workload-probe"

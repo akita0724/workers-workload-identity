@@ -1,0 +1,101 @@
+---
+title: クイックスタート
+description: ローカル E2E を実行し、Cloudflare の隔離されたステージング環境で発行を確認する
+sidebar:
+  icon: rocket
+  order: 2
+---
+
+最短の確認方法は、ローカルの workerd 上で issuer、caller、relying party を別々の Worker として動かすことです。Cloudflare アカウントや外部クラウドの資格情報は不要です。
+
+ステージングへデプロイする前に、[ワークロード ID フェデレーションとは](./oidc.mdx)と[セキュリティモデル](./reference/security.md)を読んでください。公開の token エンドポイントがない理由と、`ctx.props` がデプロイの信頼境界に含まれる理由を説明しています。
+
+## 必要な環境
+
+- Node.js 24 以上
+- pnpm 12.15.0。ルートの `package.json` の `packageManager` と同じ版
+- workerd の統合テストを実行できる十分な CPU とメモリ
+
+リポジトリのルートで依存関係を固定された lockfile からインストールします。
+
+```sh
+pnpm install --frozen-lockfile
+```
+
+## ローカル E2E で発行から検証まで確認する
+
+```sh
+pnpm test:e2e
+```
+
+テストは Service Binding の固定 `ctx.props`、Policy D1、RSA 署名、公開 JWKS、Bearer JWT の検証を通します。署名や RPC をモックにせず、テスト実行中に生成した鍵だけを使います。リモート環境は変更しません。
+
+テストは、有効な token が HTTP 200 で受理され、次のケースが 401 または発行エラーで拒否されることを確認します。
+
+- token の欠落、形式不正、署名改変、期限切れ
+- `iss`、`aud`、`sub` の不一致
+- grant のない audience
+- 停止済みまたは未登録の caller
+- `ctx.props` の欠落
+- 現用鍵や署名 secret の欠落
+- relying party の allowlist にない署名アルゴリズム
+
+すべての単体・統合テストを実行する場合は `pnpm test` を使います。
+
+## デプロイせずにステージング設定を検査する
+
+Cloudflare のリソースを作らずに、5つの Worker と管理画面をビルドできます。
+
+```sh
+pnpm staging:check --sample
+```
+
+生成物は Git の追跡対象外である `.deploy/sample/` に保存されます。このコマンドは dry-run だけを実行し、デプロイしません。
+
+## 隔離した Cloudflare ステージングへデプロイする
+
+:::danger
+ステージングスクリプトは、Cloudflare account に D1 データベース、Worker、Workflow を作成します。専用の検証用 account または明確に分離した接頭辞を使用してください。生成される `oidc-smoke` Worker を本番へ流用しないでください。
+:::
+
+デプロイには Worker、D1、Workflow を管理できる Wrangler の認証が必要です。Rotation Controller 用には、account 単位の **Workers Scripts Edit** と **Read** 権限を持つ別の API token も使います。Controller が API を呼ぶのは `CF_ISSUER_SCRIPT` で固定した issuer script だけですが、token 自体は account 内の任意の Worker を更新できるため、高権限な資格情報として扱ってください。
+
+```sh
+pnpm exec wrangler login
+pnpm exec wrangler whoami
+
+pnpm staging:configure \
+  --account-id <CLOUDFLARE_ACCOUNT_ID> \
+  --workers-subdomain <WORKERS_SUBDOMAIN>
+
+pnpm staging:check
+```
+
+`workers-subdomain` にはサブドメインのラベルだけを指定し、`https://` と `.workers.dev` を付けません。別環境を作る場合は、最初の `staging:configure` に `--prefix oidc-staging` のような一意の接頭辞を追加します。
+
+Rotation Controller 用 token は、値をコマンド履歴へ残さない方法で環境変数に設定します。
+
+```zsh
+read -rs 'OIDC_ROTATION_API_TOKEN?Rotation API token: '
+printf '\n'
+export OIDC_ROTATION_API_TOKEN
+pnpm staging:deploy
+unset OIDC_ROTATION_API_TOKEN
+```
+
+デプロイ後、最初の署名鍵を生成して smoke test を実行し、その後に最初の管理者の招待を作成します。
+
+```sh
+pnpm staging:test
+pnpm staging:bootstrap
+```
+
+`staging:test` は初回の RS256 鍵を生成し、JWKS へ60秒先行掲載してから現用鍵へ切り替えます。続いてテスト専用の caller と audience を登録し、発行、拒否、JWKS 検証を確認します。`staging:bootstrap` は最初の `security-admin` と15分有効の招待を作成します。保存される `adminUrl` は、issuer のホストの `/admin/` で終わる URL です。
+
+`staging:deploy` は2つのコマンドを逆の順序で表示しますが、両者は互いに依存しません。audience がまだない状態で最初の鍵を有効にするため、また15分の招待期間をパスキーを登録する準備ができてから始めるため、`staging:test` を先に実行します。
+
+すべてのコマンド、作成されるリソース、秘密情報を含むローカルファイル、復旧の手順は[ステージングへのデプロイ](./guides/deployment.md)に記載しています。
+
+## 次に行うこと
+
+既存 Worker を接続する前に、[issuer と caller の設定](./guides/configuration.md)で `ISSUER_URL`、audience、client、grant、Service Binding の関係を確認します。外部プロバイダーとの資格情報交換を試す前に、[プロバイダー対応状況](./reference/provider-support.mdx)を確認してください。

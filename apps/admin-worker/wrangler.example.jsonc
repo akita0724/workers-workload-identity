@@ -1,0 +1,60 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "oidc-admin",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-24",
+  "workers_dev": false,
+  "triggers": { "crons": ["*/5 * * * *"] },
+  "routes": [
+    { "pattern": "admin.example.com/*", "zone_name": "example.com" },
+    { "pattern": "admin-step-up.example.com/*", "zone_name": "example.com" },
+  ],
+  "vars": {
+    "ADMIN_ORIGIN": "https://admin.example.com",
+    "ISSUER_URL": "https://oidc.example.com",
+    "ADMIN_AUTH_MODE": "cloudflare-access",
+    "ACCESS_TEAM_DOMAIN": "example.cloudflareaccess.com",
+    "ACCESS_AUD": "REPLACE_WITH_ACCESS_APPLICATION_AUD",
+    "ACCESS_STEP_UP_AUD": "REPLACE_WITH_SEPARATE_STEP_UP_APPLICATION_AUD",
+    "ACCESS_STEP_UP_ORIGIN": "https://admin-step-up.example.com",
+  },
+  "secrets": {
+    "required": ["CSRF_SECRET"],
+  },
+  "assets": {
+    "directory": "../admin-ui/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true,
+  },
+  "services": [
+    {
+      "binding": "ROTATION",
+      "service": "oidc-rotation",
+      "entrypoint": "RotationRpc",
+      "props": {
+        "caller": "admin",
+      },
+    },
+  ],
+  "d1_databases": [
+    {
+      "binding": "POLICY_DB",
+      "database_name": "oidc-policy",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+      "migrations_dir": "../../migrations/policy",
+    },
+    {
+      "binding": "ADMIN_DB",
+      "database_name": "oidc-admin",
+      "database_id": "00000000-0000-0000-0000-000000000003",
+      "migrations_dir": "../../migrations/admin",
+    },
+  ],
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true,
+    },
+  },
+}

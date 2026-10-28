@@ -1,0 +1,29 @@
+{
+  "name": "wif-probe-azure",
+  "main": "index.js",
+  "compatibility_date": "2026-10-27",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true
+    }
+  },
+  "services": [
+    {
+      "binding": "OIDC_ISSUER",
+      "service": "oidc",
+      "entrypoint": "IssuerRpc",
+      "props": {
+        "clientId": "probe-azure"
+      }
+    }
+  ],
+  "vars": {
+    "AUDIENCE": "api://AzureADTokenExchange",
+    "AZURE_TENANT_ID": "00000000-0000-0000-0000-000000000000",
+    "AZURE_CLIENT_ID": "00000000-0000-0000-0000-000000000000",
+    "AZURE_SUBSCRIPTION_ID": "00000000-0000-0000-0000-000000000000",
+    "AZURE_RESOURCE_GROUP": "example-workload-probe"
+  }
+}

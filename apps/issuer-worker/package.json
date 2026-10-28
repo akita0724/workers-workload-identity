@@ -1,0 +1,36 @@
+{
+  "name": "@workers-workload-identity/issuer-worker",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "Issuer Worker: Service Binding RPC, discovery metadata, and JWKS",
+  "homepage": "https://github.com/akita0724/workers-workload-identity#readme",
+  "bugs": {
+    "url": "https://github.com/akita0724/workers-workload-identity/issues"
+  },
+  "license": "MIT",
+  "author": "akita0724",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akita0724/workers-workload-identity.git",
+    "directory": "apps/issuer-worker"
+  },
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@workers-workload-identity/contracts": "workspace:*",
+    "@workers-workload-identity/domain-identity": "workspace:*",
+    "@workers-workload-identity/domain-keys": "workspace:*",
+    "hono": "4.13.13",
+    "jose": "6.2.13",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.4.7",
+    "@workers-workload-identity/client": "workspace:*",
+    "esbuild": "0.28.2",
+    "vitest": "5.0.5"
+  }
+}

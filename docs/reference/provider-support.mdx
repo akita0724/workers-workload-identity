@@ -1,0 +1,58 @@
+---
+title: Provider support
+description: Integration patterns, verification status, and the evidence required before declaring provider support
+sidebar:
+  order: 8
+---
+
+Every external provider is currently **unverified**. A provider may document a compatible protocol, but this project does not declare support until a real token exchange with this issuer succeeds.
+
+The issuer publishes AWS IAM's requested `issuer`, `jwks_uri`, `claims_supported`, `response_types_supported`, `subject_types_supported`, and `id_token_signing_alg_values_supported` fields. `id_token_signing_alg_values_supported` is the static list `["RS256", "ES256"]`, not the keys currently in the JWKS. The last three fields are workload federation compatibility metadata; they do not imply an OIDC authorization endpoint or ID Token flow. Live AWS validation remains outstanding. [AWS IAM requirements](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html)
+
+## Cloud requirements
+
+| Provider                    | Main requirements                                                                                                                                                                              | Remaining validation                                                                                                                                                                                                                                                                                             |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AWS IAM / STS               | Public HTTPS issuer, discovery and JWKS, the metadata above, matching registered audience, and a role trust policy constrained by `sub` and `aud`. JWKS is limited to 100 RSA and 100 EC keys. | Publish at least one key; test STS exchange, claim mismatches, and rotation. [AWS IAM](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html)                                                                                                                                     |
+| Google Cloud                | Public discovery with HTTPS `jwks_uri` or uploaded JWKS, issuer, allowed audience, `iat` and `exp`, and attribute mapping to `google.subject` (up to 127 characters).                          | Configure and grant the expected audience, verify subject length and uniqueness, and test STS exchange and rotation. [Google Cloud](https://docs.cloud.google.com/iam/docs/workload-identity-federation-with-other-providers), [attributes](https://docs.cloud.google.com/iam/docs/workload-identity-federation) |
+| Microsoft Entra ID          | Public discovery and JWKS, matching federated credential issuer, subject, and audience, RS256 for external issuers, and `use: sig` on the JWK.                                                 | Select RS256 for the audience and test trust configuration, exchange, and rotation. [Microsoft Entra](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-spiffe-spire)                                                                                                             |
+| Oracle Cloud Infrastructure | Configure an Identity Propagation Trust with issuer and key trust, then exchange the JWT for a resource principal session token.                                                               | Validate issuer, JWKS, claim-based trust policy, and exchange; confirm required metadata for the selected integration. [OCI](https://docs.oracle.com/en-us/iaas/Content/Identity/api-getstarted/token_exchange_grant_type_workload_id-federation.htm)                                                            |
+
+Last updated: 2026-10-27
+
+| Provider                    | Intended integration                                                   | Status                                                 | Next verification                                                     |
+| --------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------- |
+| AWS STS                     | IAM OIDC provider + `AssumeRoleWithWebIdentity`                        | Unverified                                             | Discovery, JWKS, `aud`/`sub` conditions, RS256/ES256, key update      |
+| Google Cloud                | External OIDC in a Workload Identity Pool/Provider                     | Unverified                                             | Provider audience, attribute mapping/condition, RS256/ES256, exchange |
+| Claude API                  | Federation issuer + rule + service account                             | Unverified                                             | Token endpoint, scope, `aud`/`sub`, key caching                       |
+| OpenAI API                  | Workload Identity Provider + service-account mapping                   | Unverified                                             | Arbitrary issuer registration, exchange endpoint, signing algorithm   |
+| Microsoft Entra             | Federated identity credential                                          | Future candidate; unverified and outside the beta gate | Issuer/subject/audience, RS256, token endpoint                        |
+| Oracle Cloud Infrastructure | Identity Propagation Trust + resource principal session token exchange | Not planned for the beta gate; unverified              | Issuer and JWKS trust, claim-based trust policy, exchange             |
+| Private API                 | Direct JWT verification with JWKS                                      | Local/staging fixture only                             | API authorization, monitoring, caching, and replay requirements       |
+
+:::warning
+“Unverified” does not mean known to be incompatible. It separates compatibility inferred from public documentation from interoperability observed in a target account.
+:::
+
+## Evidence required for support
+
+For each provider, verify at least:
+
+- issuer and JWKS registration, key retrieval, and cache refresh;
+- success with the intended `iss`, `aud`, and `sub`;
+- rejection when each claim is wrong;
+- accepted algorithms and handling of an unknown `kid`;
+- permissions and maximum lifetime of exchanged credentials;
+- effect of client disablement, grant removal, and relying-party revocation;
+- normal and immediate key rotation; and
+- caller behavior under rate limits, timeouts, and transient failures.
+
+Record the date, environment type, algorithm, audience format, observed cache duration, and both positive and negative cases. Never publish real account IDs, role ARNs, provider IDs, JWTs, or access tokens.
+
+## Do not confuse exchange with direct API authentication
+
+For AWS, Google Cloud, and Microsoft Entra, the caller sends the issuer JWT to the provider's exchange endpoint and receives temporary credentials. Claude API and OpenAI API similarly require a federation token endpoint to accept the assertion before the caller sends the exchanged access token to the normal API.
+
+Do not send an issuer assertion directly as a normal API Bearer token. A private API may accept it directly only when that API implements the rules in [Verify an assertion](../guides/verifying-assertions.md).
+
+The [live provider validation plan](../design/provider-validation.md) covers the four initial targets and also describes Microsoft Entra and Oracle Cloud Infrastructure. [Specifications and primary sources](../design/references.md) also covers Microsoft Entra. Live validation of Microsoft Entra and Oracle Cloud Infrastructure is outside the beta gate.

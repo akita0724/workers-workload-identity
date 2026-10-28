@@ -1,0 +1,101 @@
+---
+title: Quickstart
+description: Run the local end-to-end suite and verify issuance in an isolated Cloudflare staging environment
+sidebar:
+  icon: rocket
+  order: 2
+---
+
+The fastest way to evaluate the project is to run the issuer, caller, and relying party as separate Workers in local workerd. You do not need a Cloudflare account or credentials for an external cloud provider.
+
+Before deploying to staging, read [What is workload identity federation?](./oidc.mdx) and the [security model](./reference/security.md). They explain why there is no public token endpoint and why `ctx.props` is part of the deployment trust boundary.
+
+## Prerequisites
+
+- Node.js 24 or later
+- pnpm 12.15.0, matching `packageManager` in the root `package.json`
+- Enough local CPU and memory to run the workerd integration suite
+
+Install the dependencies from the pinned lockfile at the repository root.
+
+```sh
+pnpm install --frozen-lockfile
+```
+
+## Run issuance and verification locally
+
+```sh
+pnpm test:e2e
+```
+
+The suite exercises fixed Service Binding `ctx.props`, Policy D1, RSA signing, the public JWKS, and Bearer JWT verification. It does not mock signing or RPC. Keys are generated for the test process, and no remote environment is changed.
+
+The suite checks that a valid token is accepted with HTTP 200 and that these cases are rejected with 401 or an issuance error:
+
+- missing, malformed, tampered, or expired tokens;
+- mismatched `iss`, `aud`, or `sub` values;
+- an audience without a grant;
+- a disabled or unknown caller;
+- missing `ctx.props`;
+- a missing active key or signing secret; and
+- a signing algorithm outside the relying party's allowlist.
+
+Run `pnpm test` when you want the full unit and integration test suite.
+
+## Validate a sample deployment without creating resources
+
+You can build all five Workers and the admin UI without creating Cloudflare resources.
+
+```sh
+pnpm staging:check --sample
+```
+
+Generated files are written to the ignored `.deploy/sample/` directory. This command uses Wrangler dry runs and does not deploy anything.
+
+## Deploy an isolated Cloudflare staging environment
+
+:::danger
+The staging scripts create D1 databases, Workers, and a Workflow in your Cloudflare account. Use a dedicated evaluation account or a clearly isolated prefix. Never promote the generated `oidc-smoke` Worker to production.
+:::
+
+Deployment requires Wrangler credentials that can manage Workers, D1, and Workflows. The Rotation Controller also uses a separate account-level API token with **Workers Scripts Edit** and **Read** permissions. The Controller calls the API only for the issuer script fixed by `CF_ISSUER_SCRIPT`, but the token itself can update any Worker in the account, so treat it as a high-privilege credential.
+
+```sh
+pnpm exec wrangler login
+pnpm exec wrangler whoami
+
+pnpm staging:configure \
+  --account-id <CLOUDFLARE_ACCOUNT_ID> \
+  --workers-subdomain <WORKERS_SUBDOMAIN>
+
+pnpm staging:check
+```
+
+Pass only the subdomain label to `workers-subdomain`, without `https://` or `.workers.dev`. Add a unique prefix such as `--prefix oidc-staging` to the first `staging:configure` command when creating another environment.
+
+Set the Rotation Controller token without leaving its value in shell history.
+
+```zsh
+read -rs 'OIDC_ROTATION_API_TOKEN?Rotation API token: '
+printf '\n'
+export OIDC_ROTATION_API_TOKEN
+pnpm staging:deploy
+unset OIDC_ROTATION_API_TOKEN
+```
+
+After deployment, generate the first signing key and run the smoke tests, then create the first administrator invitation.
+
+```sh
+pnpm staging:test
+pnpm staging:bootstrap
+```
+
+`staging:test` generates the first RS256 key, prepublishes it in the JWKS for 60 seconds, and then activates it. It registers dedicated test callers and audiences before checking issuance, rejection, and JWKS verification. `staging:bootstrap` creates the first `security-admin` and an invitation that expires after 15 minutes; open the `adminUrl` it saves, which ends in `/admin/` on the issuer host.
+
+`staging:deploy` prints the two commands in the opposite order, but they do not depend on each other. Run `staging:test` first so the first key is active before any audience exists, and so the 15-minute invitation window starts only when you are ready to register a passkey.
+
+The detailed [staging deployment runbook](./guides/deployment.md) documents every command, resource, secret-bearing local file, and recovery path.
+
+## Next steps
+
+Before connecting an existing Worker, read [Configure the issuer and caller](./guides/configuration.md) to understand how `ISSUER_URL`, audiences, clients, grants, and Service Bindings fit together. Check [Provider support](./reference/provider-support.mdx) before attempting an external credential exchange.

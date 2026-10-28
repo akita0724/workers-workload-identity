@@ -1,0 +1,44 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "oidc-rotation",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-24",
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "workers_dev": false,
+  "triggers": { "crons": ["*/5 * * * *"] },
+  "vars": {
+    "ISSUER_URL": "https://oidc.example.com",
+    "CF_ACCOUNT_ID": "00000000000000000000000000000000",
+    "CF_ISSUER_SCRIPT": "oidc",
+  },
+  "secrets": {
+    "required": ["CF_API_TOKEN"],
+  },
+  "workflows": [
+    {
+      "name": "oidc-rotation-workflow",
+      "binding": "ROTATION_WORKFLOW",
+      "class_name": "RotationWorkflow",
+    },
+  ],
+  "d1_databases": [
+    {
+      "binding": "POLICY_DB",
+      "database_name": "oidc-policy",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+      "migrations_dir": "../../migrations/policy",
+    },
+    {
+      "binding": "KEY_DB",
+      "database_name": "oidc-keys",
+      "database_id": "00000000-0000-0000-0000-000000000002",
+      "migrations_dir": "../../migrations/keys",
+    },
+  ],
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true,
+    },
+  },
+}

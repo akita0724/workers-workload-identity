@@ -1,0 +1,27 @@
+{
+  "name": "@workers-workload-identity/contracts",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "Browser-safe Zod contracts shared by workers-workload-identity Workers and UI",
+  "homepage": "https://github.com/akita0724/workers-workload-identity#readme",
+  "bugs": {
+    "url": "https://github.com/akita0724/workers-workload-identity/issues"
+  },
+  "license": "MIT",
+  "author": "akita0724",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akita0724/workers-workload-identity.git",
+    "directory": "packages/contracts"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  }
+}

@@ -1,0 +1,58 @@
+---
+title: プロバイダー対応状況
+description: 外部クラウドと独自 API の接続方式、検証状態、対応を表明するための条件
+sidebar:
+  order: 8
+---
+
+外部プロバイダーは、現時点ですべて**未検証**です。各社の公開仕様に接続方式が記載されていても、この issuer との実機 token exchange が成功するまでは「対応済み」と表明しません。
+
+AWS IAM が要求する `issuer`、`jwks_uri`、`claims_supported`、`response_types_supported`、`subject_types_supported`、`id_token_signing_alg_values_supported` を公開します。`id_token_signing_alg_values_supported` は固定のリスト `["RS256", "ES256"]` で、JWKS に現在掲載中の鍵を表しません。後ろの 3 項目はワークロード連携向けの互換性情報であり、OIDC の認可エンドポイントや ID Token フローの実装を意味しません。AWS での実機検証は未完了です。[AWS IAM の要件](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html)
+
+## クラウド別の要件
+
+| プロバイダー                | 主な要件                                                                                                                                                                                                         | 残っている検証                                                                                                                                                                                                                                                                               |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AWS IAM / STS               | HTTPS の issuer、公開 discovery と JWKS、上記メタデータ、登録した audience と JWT の `aud` の一致。IAM ロールの trust policy で `sub` と `aud` を制限する。JWKS は RSA・EC それぞれ最大 100 鍵。                 | 少なくとも 1 つの公開鍵を用意し、STS 交換・誤ったクレームの拒否・鍵ローテーションを検証する。[AWS IAM](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html)                                                                                                 |
+| Google Cloud                | 公開 discovery 内の HTTPS `jwks_uri` または直接登録した JWKS、issuer、許可 audience、JWT の `iat` と `exp`。属性を `google.subject` にマッピングし、条件でアクセスを制限する。`google.subject` は最大 127 文字。 | 既定 audience またはカスタム audience を grant し、subject の長さと一意性、STS 交換と鍵更新を検証する。[Google Cloud](https://docs.cloud.google.com/iam/docs/workload-identity-federation-with-other-providers)、[属性](https://docs.cloud.google.com/iam/docs/workload-identity-federation) |
+| Microsoft Entra ID          | 公開 discovery と JWKS、federated identity credential の issuer・subject・audience の一致。外部 issuer は RS256 を使い、JWK に `use: sig` を付ける。                                                             | 対象 audience を RS256 に設定し、信頼設定と token exchange、鍵更新を検証する。[Microsoft Entra](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-spiffe-spire)                                                                                               |
+| Oracle Cloud Infrastructure | Identity Propagation Trust に issuer と公開鍵などの信頼情報を登録し、JWT を resource principal session token に交換する。                                                                                        | issuer、JWKS とクレームに基づく trust policy の設定および交換を検証する。具体的なメタデータの必須項目は接続方式ごとに確認する。[OCI](https://docs.oracle.com/en-us/iaas/Content/Identity/api-getstarted/token_exchange_grant_type_workload_id-federation.htm)                                |
+
+最終更新: 2026-10-27
+
+| プロバイダー                | 想定する方式                                                           | 状態                                   | 次の確認                                                     |
+| --------------------------- | ---------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------ |
+| AWS STS                     | IAM OIDC provider + `AssumeRoleWithWebIdentity`                        | 未検証                                 | discovery、JWKS、`aud`/`sub` 条件、RS256/ES256、鍵更新       |
+| Google Cloud                | Workload Identity Pool/Provider の外部 OIDC                            | 未検証                                 | provider audience、属性 mapping/condition、RS256/ES256、交換 |
+| Claude API                  | Federation issuer + rule + service account                             | 未検証                                 | token endpoint、scope、`aud`/`sub`、鍵キャッシュ             |
+| OpenAI API                  | Workload Identity Provider + service account mapping                   | 未検証                                 | 任意 OIDC issuer の登録可否、交換 endpoint、署名方式         |
+| Microsoft Entra             | Federated identity credential                                          | 将来候補・未検証（ベータ版のゲート外） | issuer/subject/audience、RS256、token endpoint               |
+| Oracle Cloud Infrastructure | Identity Propagation Trust + resource principal session token への交換 | ベータ版のゲートでは予定なし・未検証   | issuer と JWKS の信頼、クレームに基づく trust policy、交換   |
+| 独自 API                    | JWKS を使った JWT の直接検証                                           | ローカル/ステージングの fixture のみ   | API の認可、監視、キャッシュ、再利用防止の要件               |
+
+:::warning
+この表の「未検証」は、非対応という意味ではありません。公式資料から推測した互換性と、対象 account で確認した相互運用性を分けるための状態です。
+:::
+
+## 対応済みへ変更する条件
+
+プロバイダーごとに、少なくとも次を実環境で確認します。
+
+- issuer と JWKS の登録、鍵取得、キャッシュ更新
+- 正しい `iss`、`aud`、`sub` の成功
+- 各クレームを誤らせた場合の拒否
+- 許可した署名アルゴリズムと未知の `kid` の扱い
+- token exchange で得た資格情報の権限と最大寿命
+- client の停止、grant の解除、relying party 側での無効化の反映
+- 通常および即時の鍵ローテーション
+- レート制限、タイムアウト、一時的な障害が起きたときの caller の動作
+
+結果には日付、対象環境、使用したアルゴリズム、audience 形式、キャッシュ実測、成功と失敗の条件を残します。アカウント ID、role ARN、provider ID、JWT、access token などの実値は公開資料へ含めません。
+
+## 接続方式を混同しない
+
+AWS、Google Cloud、Microsoft Entra では、caller が issuer JWT をプロバイダーの交換エンドポイントへ送り、一時資格情報を受け取ります。Claude API と OpenAI API でも同様に、federation の token エンドポイントがアサーションを受理してから、交換で得た access token を通常の API へ送ります。
+
+issuer JWT を通常 API の Bearer token として直接送らないでください。独自 API は、[アサーションを検証する](../guides/verifying-assertions.md)の規則を実装している場合に限り、アサーションを直接受け取れます。
+
+[プロバイダーの実機検証計画](../design/provider-validation.md)は初期の4つの対象を扱い、Microsoft Entra と Oracle Cloud Infrastructure についても記載しています。[仕様と一次資料](../design/references.md)は Microsoft Entra も扱います。Microsoft Entra と Oracle Cloud Infrastructure の実機検証はベータ版のゲートに含めません。

@@ -1,0 +1,24 @@
+{
+  "name": "@workers-workload-identity/smoke-receiver",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "Test relying-party Worker for staging and end-to-end tests",
+  "homepage": "https://github.com/akita0724/workers-workload-identity#readme",
+  "bugs": {
+    "url": "https://github.com/akita0724/workers-workload-identity/issues"
+  },
+  "license": "MIT",
+  "author": "akita0724",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akita0724/workers-workload-identity.git",
+    "directory": "apps/smoke-receiver"
+  },
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "jose": "6.2.13"
+  }
+}

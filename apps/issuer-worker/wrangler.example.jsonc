@@ -1,0 +1,32 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "oidc",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-24",
+  "workers_dev": false,
+  "triggers": { "crons": ["17 * * * *"] },
+  "vars": {
+    "ISSUER_URL": "https://oidc.example.com",
+    "RATE_LIMIT_PER_MINUTE": "120",
+  },
+  "d1_databases": [
+    {
+      "binding": "POLICY_DB",
+      "database_name": "oidc-policy",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+      "migrations_dir": "../../migrations/policy",
+    },
+    {
+      "binding": "KEY_DB",
+      "database_name": "oidc-keys",
+      "database_id": "00000000-0000-0000-0000-000000000002",
+      "migrations_dir": "../../migrations/keys",
+    },
+  ],
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true,
+    },
+  },
+}

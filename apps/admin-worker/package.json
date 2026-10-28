@@ -1,0 +1,36 @@
+{
+  "name": "@workers-workload-identity/admin-worker",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "Admin API and console Worker for workers-workload-identity",
+  "homepage": "https://github.com/akita0724/workers-workload-identity#readme",
+  "bugs": {
+    "url": "https://github.com/akita0724/workers-workload-identity/issues"
+  },
+  "license": "MIT",
+  "author": "akita0724",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akita0724/workers-workload-identity.git",
+    "directory": "apps/admin-worker"
+  },
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "14.0.3",
+    "@workers-workload-identity/contracts": "workspace:*",
+    "@workers-workload-identity/domain-identity": "workspace:*",
+    "@workers-workload-identity/domain-keys": "workspace:*",
+    "@workers-workload-identity/domain-operators": "workspace:*",
+    "hono": "4.13.13",
+    "jose": "6.2.13",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.4.7",
+    "vitest": "5.0.5"
+  }
+}

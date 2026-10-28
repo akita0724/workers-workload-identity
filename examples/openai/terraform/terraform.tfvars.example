@@ -1,0 +1,5 @@
+identity_provider_id = "REPLACE"
+service_account_id   = "REPLACE"
+audience             = "https://api.openai.com/v1"
+issuer_url           = "https://oidc.example.com"
+subject              = "service:probe-openai"

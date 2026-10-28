@@ -1,0 +1,7 @@
+project_id  = "example-project"
+issuer_url  = "https://oidc.example.com"
+audience    = "urn:example:gcp:staging"
+subject     = "service:probe-google-cloud"
+pool_id     = "example-pool"
+provider_id = "example-provider"
+role_id     = "workloadIdentityProbe"

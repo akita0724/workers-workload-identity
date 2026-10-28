@@ -1,0 +1,10 @@
+{
+  "services": [
+    {
+      "binding": "OIDC_ISSUER",
+      "service": "oidc",
+      "entrypoint": "IssuerRpc",
+      "props": { "clientId": "example-caller-prod" },
+    },
+  ],
+}

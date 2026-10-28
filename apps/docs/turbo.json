@@ -1,0 +1,13 @@
+{
+  "extends": ["//"],
+  "tags": ["docs"],
+  "tasks": {
+    "build": {
+      "inputs": ["$TURBO_DEFAULT$", "../../docs/**"],
+      "outputs": ["dist/**"]
+    },
+    "validate": {
+      "inputs": ["$TURBO_DEFAULT$", "../../docs/**"]
+    }
+  }
+}

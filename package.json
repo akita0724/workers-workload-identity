@@ -1,0 +1,56 @@
+{
+  "name": "workers-workload-identity",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "Short-lived workload identity assertions for Cloudflare Workers",
+  "homepage": "https://github.com/akita0724/workers-workload-identity#readme",
+  "bugs": {
+    "url": "https://github.com/akita0724/workers-workload-identity/issues"
+  },
+  "license": "MIT",
+  "author": "akita0724",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akita0724/workers-workload-identity.git"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "node --test scripts/*.test.mjs examples/shared/probe.test.mjs && turbo run test --concurrency=1",
+    "lint": "oxlint apps packages scripts",
+    "format": "oxfmt apps packages scripts package.json turbo.json tsconfig.base.json",
+    "format:check": "oxfmt --check apps packages scripts package.json turbo.json tsconfig.base.json",
+    "boundaries": "turbo boundaries",
+    "docs:dev": "pnpm --filter @workers-workload-identity/docs dev",
+    "docs:validate": "pnpm --filter @workers-workload-identity/docs validate",
+    "docs:build": "pnpm --filter @workers-workload-identity/docs build",
+    "docs:translations:check": "pnpm --filter @workers-workload-identity/docs translations:check",
+    "docs:audit:i18n": "pnpm --filter @workers-workload-identity/docs audit:i18n",
+    "staging:configure": "node scripts/staging.mjs configure",
+    "staging:check": "node scripts/staging.mjs check",
+    "staging:deploy": "node scripts/staging.mjs deploy",
+    "staging:bootstrap": "node scripts/staging.mjs bootstrap",
+    "staging:test": "node scripts/staging.mjs test",
+    "test:e2e": "pnpm --filter @workers-workload-identity/smoke-worker test:e2e",
+    "ops": "node scripts/operations.mjs",
+    "client:build": "node scripts/build-client.mjs"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sts": "3.1156.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.4.7",
+    "@cloudflare/workers-types": "5.20261024.1",
+    "esbuild": "0.28.2",
+    "oxfmt": "0.74.0",
+    "oxlint": "1.89.0",
+    "turbo": "2.11.10",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5",
+    "wrangler": "4.152.0"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@12.15.0"
+}

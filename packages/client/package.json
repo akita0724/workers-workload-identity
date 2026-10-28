@@ -1,0 +1,34 @@
+{
+  "name": "@workers-workload-identity/client",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "Caller-side RPC client and Service Binding helper for workers-workload-identity",
+  "homepage": "https://github.com/akita0724/workers-workload-identity#readme",
+  "bugs": {
+    "url": "https://github.com/akita0724/workers-workload-identity/issues"
+  },
+  "license": "MIT",
+  "author": "akita0724",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akita0724/workers-workload-identity.git",
+    "directory": "packages/client"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./config": "./src/config.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "build": "node ../../scripts/build-client.mjs"
+  },
+  "dependencies": {
+    "@workers-workload-identity/contracts": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "vitest": "5.0.5"
+  }
+}

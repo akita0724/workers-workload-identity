@@ -1,0 +1,6 @@
+issuer_url         = "https://oidc.example.com"
+audience           = "urn:example:claude:staging"
+subject            = "service:probe-claude"
+organization_id    = "00000000-0000-0000-0000-000000000000"
+service_account_id = "svac_REPLACE"
+workspace_id       = "wrkspc_REPLACE"

@@ -1,0 +1,27 @@
+{
+  "name": "wif-probe-aws",
+  "main": "index.js",
+  "compatibility_date": "2026-10-27",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true
+    }
+  },
+  "services": [
+    {
+      "binding": "OIDC_ISSUER",
+      "service": "oidc",
+      "entrypoint": "IssuerRpc",
+      "props": {
+        "clientId": "probe-aws"
+      }
+    }
+  ],
+  "vars": {
+    "AUDIENCE": "urn:example:aws:staging",
+    "AWS_REGION": "us-east-1",
+    "AWS_ROLE_ARN": "arn:aws:iam::123456789012:role/example-workload-probe"
+  }
+}
