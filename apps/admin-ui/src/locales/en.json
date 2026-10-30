@@ -405,5 +405,19 @@
   "次回の実行日時は1分以上先に設定してください。": "Set the next run at least one minute in the future.",
   "この提案は承認できません。提案者本人は承認できず、処理済みの提案も承認できません。": "This proposal cannot be approved. Proposers cannot approve their own proposals, and a proposal can be approved only once.",
   "現在のローテーションの状態では、この操作を実行できません。画面を更新してください。": "This action is not allowed in the rotation's current state. Refresh the page.",
-  "新しい鍵が issuer にまだ完全にデプロイされていないか、公開 JWKS に掲載されていません。少し待ってからもう一度お試しください。": "The new key is not yet fully deployed to the issuer or published in the JWKS. Wait a moment and try again."
+  "新しい鍵が issuer にまだ完全にデプロイされていないか、公開 JWKS に掲載されていません。少し待ってからもう一度お試しください。": "The new key is not yet fully deployed to the issuer or published in the JWKS. Wait a moment and try again.",
+  "削除するには先に停止してください": "Disable the workload before deleting it",
+  "ワークロードを削除しますか？": "Delete workload?",
+  "{{value1}} と、このワークロードの audience の許可を削除します。監査履歴は残ります。この操作は取り消せません。": "Delete {{value1}} and its audience grants. Audit history is retained. This action cannot be undone.",
+  "ワークロードを削除しました": "Workload deleted",
+  "ワークロードを削除": "Delete workload",
+  "削除しても、発行済みの JWT や交換済みの資格情報は失効しません。": "Deleting does not revoke issued JWTs or exchanged credentials.",
+  "Audience を削除しますか？": "Delete audience?",
+  "{{value1}} と、その接続確認記録を削除します。削除前の設定と接続確認記録は監査履歴に残ります。この操作は取り消せません。": "Delete {{value1}} and its compatibility confirmations. The previous settings and confirmations are retained in audit history. This action cannot be undone.",
+  "Audience を削除しました": "Audience deleted",
+  "Audience を削除": "Delete audience",
+  "次のワークロードの許可を外してから削除してください。停止中のワークロードも対象です。": "Remove grants from the following workloads before deleting. Disabled workloads also count.",
+  "削除するには先にワークロードを停止してください。": "Disable the workload before deleting it.",
+  "この Audience を許可しているワークロードがあります。許可を外してから削除してください。": "Workloads still have grants for this audience. Remove those grants before deleting it.",
+  "削除": "Delete"
 }

@@ -36,6 +36,40 @@ issuer はリクエストごとに Policy D1 の主系を読み、認可結果�
 
 `pnpm test:e2e` はローカルの経路を、`pnpm staging:test` はデプロイ済みのステージング環境で中心的なケースを確認します。
 
+## 不要なワークロードと audience を削除する
+
+`operator` と `security-admin` は、管理画面からワークロードと audience を削除できます。`viewer` は削除できません。認証と Origin・CSRF の確認はポリシー編集と共通で、追加のステップアップ認証は不要です。
+
+1. 「ワークロード」で対象を停止し、削除ボタンを選びます。確認画面で対象を確かめてから削除してください。有効なワークロードは削除できません。
+2. ワークロードを削除すると、登録情報、紐づく audience の許可、発行回数制限のデータが削除されます。他のワークロードと audience の登録は残ります。
+3. 「Audience」で対象の削除ボタンを選びます。許可を持つワークロードがある場合は、その一覧が表示され、削除できません。停止中のワークロードも対象です。先に許可を外すか、そのワークロードを削除してください。
+4. 許可がなくなったら、audience の削除を確定します。設定と互換性の確認記録が、有効な設定から削除されます。
+
+既存のポリシー監査履歴と発行履歴は残ります。発行履歴には通常の保存期間が適用されます。削除イベントには、操作者、対象、時刻、削除前の設定を記録します。`before_json` には、ワークロードの場合は audience の許可、audience の場合は互換性の確認記録も含めます。`after_json` は JSON の `null` です。削除条件の確認、監査記録、削除は Policy D1 の同じトランザクションで確定し、途中で失敗した場合はすべて取り消します。追加の DB マイグレーションは不要です。
+
+登録を削除しても、発行済みの JWT、交換済みの資格情報、処理中の発行は取り消せません。また、配備済み caller の Service Binding は残ります。同じ client ID を再登録する場合は、古い binding もその ID を使えるため、先に不要な binding を取り除いてください。
+
+### 管理 API
+
+以下は認証済みの管理画面用 API です。JSON と通常の Origin・CSRF ヘッダーを送信します。`version` には、一覧から取得した現在の値を指定してください。
+
+| メソッドとパス | JSON 本文 | 成功時（`200`） |
+| --- | --- | --- |
+| `DELETE /api/clients/:clientId` | `{"version":3}` | `{"clientId":"retired-worker","deleted":true}` |
+| `DELETE /api/audiences` | `{"audience":"https://api.example.com/path?scope=read","version":2}` | `{"audience":"https://api.example.com/path?scope=read","deleted":true}` |
+
+audience は JSON 本文に入れます。URI のスラッシュ、クエリ、フラグメント、パーセントエンコードを含む値も、そのまま照合します。
+
+| ステータス・エラー | 対処 |
+| --- | --- |
+| `400 invalid-input` | 有効な識別子と、0 以上の整数の version を指定し、余分な項目を除いてください。 |
+| `401 unauthorized` / `403 forbidden` または `invalid-request` | operator または security-admin でログインし、正しい Origin・CSRF ヘッダーを送信してください。 |
+| `404 not-found` | 一覧を更新してください。対象が存在しないか、既に削除されています。 |
+| `409 version-conflict` | 一覧を更新し、最新の設定を確認してから操作し直してください。 |
+| `409 client-must-be-disabled` | 先にワークロードを停止し、更新後の version を指定してください。 |
+| `409 audience-in-use` | 対象 audience の許可をすべて外してください。応答の `clientIds` には、停止中を含む対象ワークロードが入ります。 |
+| `503 unavailable` | 変更は確定されていません。DB の障害を解消し、一覧を更新してから再試行してください。 |
+
 ## token を記録せずに監視を組み立てる
 
 Wrangler のサンプル設定はログと trace を有効にしています。さらに各 Worker は、次の非機密な情報を記録します。

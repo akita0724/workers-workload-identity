@@ -6,6 +6,7 @@ All notable changes to this project are documented in this file. The format foll
 
 ### Added
 
+- Workload and audience deletion in the admin API and console. Workloads must be disabled, and audiences must have no remaining grants. Deletion retains audit history and records the previous settings atomically with cleanup of related grants and rate-limit buckets.
 - Issuer Worker with a named `IssuerRpc` Service Binding entrypoint, limited discovery metadata, and a public JWKS.
 - Caller SDK (`packages/client`) with an ESM and TypeScript declaration build (`pnpm client:build`). It is not published to npm.
 - Admin console: policy editing with change review, audience editing and relying-party confirmation records, read-only views, and a responsive layout.

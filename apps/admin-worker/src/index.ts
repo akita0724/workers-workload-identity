@@ -14,6 +14,9 @@ import {
   audienceUpdateSchema,
   clientCreateSchema,
   clientUpdateSchema,
+  clientIdSchema,
+  audienceSchema,
+  versionSchema,
   operatorCreateSchema,
   rotationPlanSchema,
 } from "@workers-workload-identity/contracts";
@@ -278,6 +281,42 @@ app.patch("/api/clients/:clientId", async (c) => {
   return c.json({ clientId, version: input.version + 1 });
 });
 
+app.delete("/api/clients/:clientId", async (c) => {
+  const operator = actor(c, "edit-policy");
+  const clientId = clientIdSchema.parse(c.req.param("clientId"));
+  const { version } = versionSchema.parse(await c.req.json());
+  const db = c.env.POLICY_DB;
+  const eventId = crypto.randomUUID();
+  // The snapshot, eligibility check, audit, and deletion share one D1 transaction.
+  const results = await db.batch<Record<string, unknown>>([
+    db.prepare("SELECT version, enabled FROM clients WHERE client_id = ?").bind(clientId),
+    db
+      .prepare(`INSERT INTO policy_audit_events
+      (event_id, actor_id, action, target, before_json, after_json, occurred_at)
+      SELECT ?, ?, 'client.delete', client_id,
+        json_object('clientId', client_id, 'subject', subject, 'enabled', enabled,
+          'version', version, 'createdAt', created_at, 'updatedAt', updated_at,
+          'audiences', json((SELECT json_group_array(audience) FROM
+            (SELECT audience FROM client_audience_grants WHERE client_id = ? ORDER BY audience)))),
+        'null', ? FROM clients WHERE client_id = ? AND version = ? AND enabled = 0`)
+      .bind(eventId, operator.id, clientId, Date.now(), clientId, version),
+    db
+      .prepare(`DELETE FROM issuance_rate_limits WHERE client_id = ?
+      AND EXISTS (SELECT 1 FROM policy_audit_events WHERE event_id = ?)`)
+      .bind(clientId, eventId),
+    // Grants cascade; durable audit and issuance history have no parent foreign key.
+    db
+      .prepare(`DELETE FROM clients WHERE client_id = ?
+      AND EXISTS (SELECT 1 FROM policy_audit_events WHERE event_id = ?)`)
+      .bind(clientId, eventId),
+  ]);
+  const previous = results[0].results[0];
+  if (!previous) return c.json({ error: "not-found" }, 404);
+  if (previous.version !== version) return c.json({ error: "version-conflict" }, 409);
+  if (previous.enabled !== 0) return c.json({ error: "client-must-be-disabled" }, 409);
+  return c.json({ clientId, deleted: true });
+});
+
 app.get("/api/audiences", async (c) => {
   actor(c, "read");
   const result = await c.env.POLICY_DB.prepare(
@@ -389,6 +428,47 @@ app.patch("/api/audiences", async (c) => {
   ]);
   if (results[0]?.meta.changes !== 1) return c.json({ error: "version-conflict" }, 409);
   return c.json({ audience: input.audience, version: input.version + 1 });
+});
+
+app.delete("/api/audiences", async (c) => {
+  const operator = actor(c, "edit-policy");
+  // Audience values may contain '/', '?', '#', or percent escapes: keep them in JSON.
+  const { audience, version } = versionSchema
+    .extend({ audience: audienceSchema })
+    .parse(await c.req.json());
+  const db = c.env.POLICY_DB;
+  const eventId = crypto.randomUUID();
+  const results = await db.batch<Record<string, unknown>>([
+    db.prepare("SELECT version FROM audiences WHERE audience = ?").bind(audience),
+    db
+      .prepare("SELECT client_id FROM client_audience_grants WHERE audience = ? ORDER BY client_id")
+      .bind(audience),
+    db
+      .prepare(`INSERT INTO policy_audit_events
+      (event_id, actor_id, action, target, before_json, after_json, occurred_at)
+      SELECT ?, ?, 'audience.delete', audience,
+        json_object('audience', audience, 'algorithm', algorithm,
+          'tokenLifetimeSeconds', token_lifetime_seconds, 'description', description,
+          'verifiedForEs256', verified_for_es256, 'exchangeVerified', exchange_verified,
+          'mixedJwksVerified', mixed_jwks_verified, 'jwksCacheSeconds', jwks_cache_seconds,
+          'version', version, 'createdAt', created_at, 'updatedAt', updated_at),
+        'null', ? FROM audiences WHERE audience = ? AND version = ?
+        AND NOT EXISTS (SELECT 1 FROM client_audience_grants WHERE audience = ?)`)
+      .bind(eventId, operator.id, Date.now(), audience, version, audience),
+    db
+      .prepare(`DELETE FROM audiences WHERE audience = ?
+      AND EXISTS (SELECT 1 FROM policy_audit_events WHERE event_id = ?)`)
+      .bind(audience, eventId),
+  ]);
+  const previous = results[0].results[0];
+  if (!previous) return c.json({ error: "not-found" }, 404);
+  if (previous.version !== version) return c.json({ error: "version-conflict" }, 409);
+  if (results[1].results.length)
+    return c.json(
+      { error: "audience-in-use", clientIds: results[1].results.map((row) => row.client_id) },
+      409,
+    );
+  return c.json({ audience, deleted: true });
 });
 
 app.get("/api/operators", async (c) => {
@@ -515,6 +595,7 @@ app.onError((error, c) => {
       409,
     );
   if (error instanceof z.ZodError) return c.json({ error: "invalid-input" }, 400);
+  if (error instanceof SyntaxError) return c.json({ error: "invalid-input" }, 400);
   if (error.message === "forbidden") return c.json({ error: "forbidden" }, 403);
   if (error.message === "invalid-origin" || error.message === "invalid-csrf") {
     return c.json({ error: "invalid-request" }, 403);
