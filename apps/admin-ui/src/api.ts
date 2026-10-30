@@ -107,6 +107,14 @@ export const messages: Record<string, string> = {
   get "version-conflict"() {
     return t("ほかの管理者が更新しました。画面を更新し、最新の内容を確認してください。");
   },
+  get "client-must-be-disabled"() {
+    return t("削除するには先にワークロードを停止してください。");
+  },
+  get "audience-in-use"() {
+    return t(
+      "この Audience を許可しているワークロードがあります。許可を外してから削除してください。",
+    );
+  },
   get "invalid-input"() {
     return t("入力内容を確認してください。");
   },

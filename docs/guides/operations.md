@@ -36,6 +36,40 @@ At least once per release, automate checks for:
 
 `pnpm test:e2e` exercises the local path. `pnpm staging:test` checks the core cases in a deployed staging environment.
 
+## Delete retired workloads and unused audiences
+
+Operators and security administrators can delete policy resources from the console. Viewers cannot delete them. Deletion uses the same session or Access authentication and Origin/CSRF checks as policy editing; it does not require an additional step-up challenge.
+
+1. On **Workloads**, disable the workload and then choose its delete action. Review the target before confirming. Enabled workloads cannot be deleted.
+2. Deleting a workload removes its client registration, all of its audience grants, and its issuance rate-limit buckets. Other workloads and the audience registrations remain.
+3. On **Audiences**, choose the audience's delete action. If any workload still has a grant, the dialog lists those workloads and blocks deletion. Disabled workloads also count: remove their grants or delete them first.
+4. Once no grants remain, confirm audience deletion. Its policy and compatibility confirmations are removed from the active configuration.
+
+Both operations retain existing policy audits and issuance history (issuance events remain subject to their normal retention period). The deletion event records the actor, target, time, and previous settings in `before_json`, with `after_json` set to JSON `null`. Workload snapshots include their audience grants; audience snapshots include their compatibility confirmations. Eligibility checks, the audit write, and deletion commit in a single Policy D1 transaction. A failure rolls back the entire operation. No new database migration is required.
+
+Deleting a registration does not revoke an issued JWT, exchanged credentials, or an issuance already in progress. It does not remove Service Bindings from deployed callers. Remove obsolete bindings before deliberately registering the same client ID again, because those bindings can identify themselves using that ID.
+
+### Admin API
+
+These routes are for the authenticated admin console. Send JSON and the normal Origin/CSRF headers; `version` is the current version returned by the resource list.
+
+| Method and path | JSON body | Success (`200`) |
+| --- | --- | --- |
+| `DELETE /api/clients/:clientId` | `{"version": 3}` | `{"clientId":"retired-worker","deleted":true}` |
+| `DELETE /api/audiences` | `{"audience":"https://api.example.com/path?scope=read","version":2}` | `{"audience":"https://api.example.com/path?scope=read","deleted":true}` |
+
+Audience identifiers stay in the JSON body so URI slashes, query strings, fragments, and percent escapes are preserved exactly.
+
+| Status / error | Action |
+| --- | --- |
+| `400 invalid-input` | Supply a valid identifier and a nonnegative integer version, without extra fields. |
+| `401 unauthorized` / `403 forbidden` or `invalid-request` | Sign in with an operator or security administrator account and use valid Origin/CSRF headers. |
+| `404 not-found` | Refresh the list; the resource does not exist or has already been deleted. |
+| `409 version-conflict` | Refresh and review the latest settings before trying again. |
+| `409 client-must-be-disabled` | Disable the workload first, then use its updated version. |
+| `409 audience-in-use` | Remove all grants for the audience. The response includes `clientIds`, including disabled workloads. |
+| `503 unavailable` | No changes were committed. Resolve the database failure and retry after refreshing. |
+
 ## Build observability without recording tokens
 
 The sample Wrangler configuration enables logs and traces. The Workers also record these non-secret signals:

@@ -226,8 +226,10 @@ export function actionName(action: string) {
   const labels: Record<string, string> = {
     "client.create": t("ワークロードを登録"),
     "client.update": t("ワークロードを更新"),
+    "client.delete": t("ワークロードを削除"),
     "audience.create": t("Audience を登録"),
     "audience.update": t("Audience を更新"),
+    "audience.delete": t("Audience を削除"),
     "operator.create": t("管理者を招待"),
     "operator.update": t("管理者の権限を更新"),
     "operator.delete": t("管理者を削除"),

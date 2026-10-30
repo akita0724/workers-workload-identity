@@ -10,6 +10,7 @@ import {
   PencilSimpleIcon as Pencil,
   PlusIcon as Plus,
   PowerIcon as Power,
+  TrashIcon as Trash,
 } from "@phosphor-icons/react";
 import {
   clientCreateSchema,
@@ -73,6 +74,7 @@ async function refresh() {
     queryClient.invalidateQueries({ queryKey: ["clients"] }),
     queryClient.invalidateQueries({ queryKey: ["audiences"] }),
     queryClient.invalidateQueries({ queryKey: ["overview"] }),
+    queryClient.invalidateQueries({ queryKey: ["audit"] }),
   ]);
 }
 
@@ -85,6 +87,7 @@ export function Clients() {
     [state, setState] = useState("all"),
     [editing, setEditing] = useState<Client | "new" | null>(null),
     [stopping, setStopping] = useState<Client | null>(null),
+    [deleting, setDeleting] = useState<Client | null>(null),
     [binding, setBinding] = useState<Client | null>(null);
   const rows =
     query.data?.clients.filter(
@@ -234,6 +237,19 @@ export function Clients() {
                             >
                               <Power size={16} />
                             </Button>
+                            <Button
+                              size="base"
+                              shape="square"
+                              variant="ghost"
+                              aria-label={t("{{value1}} を削除", { value1: row.client_id })}
+                              title={
+                                row.enabled ? t("削除するには先に停止してください") : t("削除")
+                              }
+                              disabled={!!row.enabled}
+                              onClick={() => setDeleting(row)}
+                            >
+                              <Trash size={16} />
+                            </Button>
                           </>
                         )}
                       </div>
@@ -290,6 +306,31 @@ export function Clients() {
             await refresh();
           }}
         />
+      )}
+      {deleting && (
+        <Confirm
+          title={t("ワークロードを削除しますか？")}
+          description={t(
+            "{{value1}} と、このワークロードの audience の許可を削除します。監査履歴は残ります。この操作は取り消せません。",
+            { value1: deleting.client_id },
+          )}
+          label={t("削除")}
+          successMessage={t("ワークロードを削除しました")}
+          danger
+          onClose={() => setDeleting(null)}
+          onConfirm={async () => {
+            try {
+              await api(`/clients/${encodeURIComponent(deleting.client_id)}`, {
+                method: "DELETE",
+                body: JSON.stringify({ version: deleting.version }),
+              });
+            } finally {
+              await refresh();
+            }
+          }}
+        >
+          <Info>{t("削除しても、発行済みの JWT や交換済みの資格情報は失効しません。")}</Info>
+        </Confirm>
       )}
       {binding && (
         <Modal
@@ -476,7 +517,10 @@ export function Audiences() {
     clients = useClients(),
     me = useMe(),
     [search, setSearch] = useState(""),
-    [editing, setEditing] = useState<Audience | "new" | null>(null);
+    [editing, setEditing] = useState<Audience | "new" | null>(null),
+    [deleting, setDeleting] = useState<Audience | null>(null);
+  const dependents =
+    clients.data?.grants.filter((grant) => grant.audience === deleting?.audience) ?? [];
   const rows =
     query.data?.audiences.filter((row) =>
       `${row.audience} ${row.description}`.toLowerCase().includes(search.toLowerCase()),
@@ -543,15 +587,26 @@ export function Audiences() {
                     </Table.Cell>
                     <Table.Cell>
                       {me.data?.role !== "viewer" && (
-                        <Button
-                          variant="ghost"
-                          size="base"
-                          shape="square"
-                          aria-label={t("{{value1}} を編集", { value1: row.audience })}
-                          onClick={() => setEditing(row)}
-                        >
-                          <Pencil size={16} />
-                        </Button>
+                        <div className="row-actions">
+                          <Button
+                            variant="ghost"
+                            size="base"
+                            shape="square"
+                            aria-label={t("{{value1}} を編集", { value1: row.audience })}
+                            onClick={() => setEditing(row)}
+                          >
+                            <Pencil size={16} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="base"
+                            shape="square"
+                            aria-label={t("{{value1}} を削除", { value1: row.audience })}
+                            onClick={() => setDeleting(row)}
+                          >
+                            <Trash size={16} />
+                          </Button>
+                        </div>
                       )}
                     </Table.Cell>
                   </Table.Row>
@@ -566,6 +621,48 @@ export function Audiences() {
           "Audience は relying party 側の設定と完全に一致させてください。ES256 と鍵の自動ローテーションは、互換性の確認を記録した audience でだけ使えます。",
         )}
       </Info>
+      {deleting && (
+        <Confirm
+          title={t("Audience を削除しますか？")}
+          description={t(
+            "{{value1}} と、その接続確認記録を削除します。削除前の設定と接続確認記録は監査履歴に残ります。この操作は取り消せません。",
+            { value1: deleting.audience },
+          )}
+          label={t("削除")}
+          successMessage={t("Audience を削除しました")}
+          danger
+          disabled={!clients.data || !!clients.error || clients.isFetching || dependents.length > 0}
+          onClose={() => setDeleting(null)}
+          onConfirm={async () => {
+            try {
+              await api("/audiences", {
+                method: "DELETE",
+                body: JSON.stringify({ audience: deleting.audience, version: deleting.version }),
+              });
+            } finally {
+              await refresh();
+            }
+          }}
+        >
+          <Notice error={clients.error} />
+          {clients.isFetching && <Loading />}
+          {dependents.length > 0 && (
+            <Info>
+              <p>
+                {t(
+                  "次のワークロードの許可を外してから削除してください。停止中のワークロードも対象です。",
+                )}
+              </p>
+              <ul>
+                {dependents.map((grant) => (
+                  <li key={grant.client_id}>{grant.client_id}</li>
+                ))}
+              </ul>
+            </Info>
+          )}
+          <Info>{t("削除しても、発行済みの JWT や交換済みの資格情報は失効しません。")}</Info>
+        </Confirm>
+      )}
       {editing && (
         <AudienceEditor
           audience={editing === "new" ? null : editing}
