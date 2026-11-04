@@ -183,6 +183,20 @@ export async function mockApi(
           updated_at: Date.now(),
         });
       }
+      if (request.method() === "DELETE" && path.startsWith("/clients/")) {
+        const clientId = decodeURIComponent(path.slice("/clients/".length));
+        fixtures["/clients"].clients = fixtures["/clients"].clients.filter(
+          (client) => client.client_id !== clientId,
+        );
+        fixtures["/clients"].grants = fixtures["/clients"].grants.filter(
+          (grant) => grant.client_id !== clientId,
+        );
+      }
+      if (request.method() === "DELETE" && path === "/audiences") {
+        fixtures["/audiences"].audiences = fixtures["/audiences"].audiences.filter(
+          (row) => row.audience !== body.audience,
+        );
+      }
       return route.fulfill({
         json: { id: "created", invitationToken: "example-invitation-for-browser-tests-only" },
       });

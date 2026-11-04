@@ -361,6 +361,7 @@ export function Confirm({
   onClose,
   onConfirm,
   danger = false,
+  disabled = false,
   children,
 }: {
   title: string;
@@ -370,6 +371,7 @@ export function Confirm({
   onClose: () => void;
   onConfirm: () => Promise<void>;
   danger?: boolean;
+  disabled?: boolean;
   children?: ReactNode;
 }) {
   useLocale();
@@ -384,12 +386,13 @@ export function Confirm({
       description={description}
     >
       <Form
-        onSubmit={() =>
+        onSubmit={() => {
+          if (disabled) return;
           void task.run(async () => {
             await onConfirm();
             onClose();
-          }, successMessage)
-        }
+          }, successMessage);
+        }}
       >
         <div className="modal-body">
           {children}
@@ -403,7 +406,7 @@ export function Confirm({
             type="submit"
             data-variant={danger ? "destructive" : "primary"}
             variant={danger ? "destructive" : "primary"}
-            disabled={task.busy}
+            disabled={task.busy || disabled}
           >
             {task.busy ? t("処理しています…") : label}
           </Button>
